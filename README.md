@@ -1,4 +1,4 @@
-# EynonMVC
+# EynonMVC - WIP
 .NET style MVC for PHP
 
 # Setup
