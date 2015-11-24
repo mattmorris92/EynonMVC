@@ -10,7 +10,11 @@ namespace Controller;
 class BaseViewController {
     public $ViewData = array();
     protected $templateFile = "default.php";
-    public $includes = array("CSS" => array("main.css", "mobile.css"), "JS" => array());
+    public $includes = array(
+        "CSS" => array("main.css", "mobile.css"), 
+        "CSS-Internal" => array("https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css"),
+        "JS-Internal" => array("https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js", "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js", "tutorial-ey.js"), 
+        "JS" => array());
     public $navigation = array("primary" => array(), "header" => array());
     public $breadcrumb = array();
     public $errors = array();
@@ -40,12 +44,15 @@ class BaseViewController {
      */
     public function View($viewPath) {
         $this->ViewData['body'] = $this->PartialView($viewPath);
-        
         // Output the base view.
         if (file_exists("system/View/Templates/" . RootViewController::$templateName . "/{$this->templateFile}")) {
             ob_start();
             include "system/View/Templates/" . RootViewController::$templateName . "/{$this->templateFile}";
             return ob_get_clean();
+            /*echo "system/View/Templates/" . RootViewController::$templateName . "/{$this->templateFile}";
+            $contents = ob_get_clean();
+            echo "<pre>" . htmlspecialchars($contents) . "</pre>";
+            die();*/
         }
         
         return false;
@@ -72,12 +79,40 @@ class BaseViewController {
             switch ($kind) {
                 case "CSS":
                     foreach ($includes as $include) {
-                        $response .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . RootViewController::$root_url . "system/View/Templates/" . RootViewController::$templateName . "/styles/{$include}\">";
+                        if (substr_count(strtolower($include), "://")) {
+                            $response .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$include}\" />\n";
+                        }
+                        else {
+                            $response .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . RootViewController::$root_url . "system/View/Templates/" . RootViewController::$templateName . "/styles/{$include}\" />\n";
+                        }
+                    }
+                    break;
+                case "CSS-Internal":
+                    foreach ($includes as $include) {
+                        if (substr_count(strtolower($include), "://")) {
+                            $response .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$include}\" />\n";
+                        }
+                        else {
+                            $response .= "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . RootViewController::$root_url . "system/View/Content/{$include}\" />\n";
+                        }
                     }
                     break;
                 case "JS":
                     foreach ($includes as $include) {
-                        $response .= "<script type=\"text/javascript\" src=\"system/View/Templates/" . RootViewController::$templateName . "/script/{$include}\">";
+                        if (substr_count(strtolower($include), "://")) {
+                            $response .= "<script type=\"text/javascript\" src=\"{$include}\" /></script>\n";
+                        }
+                        else
+                            $response .= "<script type=\"text/javascript\" src=\"system/View/Templates/" . RootViewController::$templateName . "/script/{$include}\"></script>\n";
+                    }
+                    break;
+                case "JS-Internal":
+                    foreach ($includes as $include) {
+                        if (substr_count(strtolower($include), "://")) {
+                            $response .= "<script type=\"text/javascript\" src=\"{$include}\" /></script>\n";
+                        }
+                        else
+                            $response .= "<script type=\"text/javascript\" src=\"system/View/Content/{$include}\"></script>\n";
                     }
                     break;
                 default:
